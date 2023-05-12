@@ -15,6 +15,8 @@ int main() {
             break;
         }
 
+// =====================================================================================================================        
+
         else if (!strncmp(cmd , "register\n" , 9)) {
 
             std::vector<std::string> empty_vect;
@@ -64,6 +66,8 @@ int main() {
 
         }
 
+// =====================================================================================================================          
+
         else if (!strncmp(cmd , "login\n" , 6)) {
             std::vector<std::string> empty_vect;
             std::string username , password , response;
@@ -111,6 +115,9 @@ int main() {
             close_connection(sockfd);
 
         }
+
+// =====================================================================================================================  
+
         else if (!strncmp(cmd , "enter_library\n" , 14)) {
             
             std::string response;
@@ -143,6 +150,9 @@ int main() {
             }
             close_connection(sockfd);
         }
+
+// =====================================================================================================================  
+
         else if (!strncmp(cmd , "get_books\n" , 10)) {
 
             std::string response;
@@ -184,6 +194,9 @@ int main() {
 
             close_connection(sockfd);
         }
+
+// =====================================================================================================================  
+
         else if (!strncmp(cmd , "get_book\n" , 9)) {
             std::string response;
             std::vector<std::string> cookies;
@@ -239,6 +252,9 @@ int main() {
             }
             close_connection(sockfd);
         }
+
+// =====================================================================================================================  
+
         else if (!strncmp(cmd , "add_book\n" , 9)) {
 
             std::string response;
@@ -299,6 +315,9 @@ int main() {
             }
             close_connection(sockfd);
         }
+
+// =====================================================================================================================  
+
         else if (!strncmp(cmd , "delete_book\n" , 12)) {
             int id;
             std::string input;
@@ -346,6 +365,9 @@ int main() {
             close_connection(sockfd);
 
         }
+
+// =====================================================================================================================  
+
         else if (!strncmp(cmd , "logout\n" , 7)) {
             
             std::string response;
