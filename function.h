@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <vector>
+#include <cctype>
 
 #include "buffer.h"
 #include "nlohmann/json.hpp"
@@ -42,3 +43,4 @@ std::string extract_json_list(std::string text);
 std::string extract_json(std::string text);
 
 bool is_number(const std::string& input);
+bool containsWhitespace(const std::string& str);

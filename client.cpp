@@ -19,22 +19,39 @@ int main() {
 
         else if (!strncmp(cmd , "register\n" , 9)) {
 
-            std::vector<std::string> empty_vect;
-            std::string username , password , response;
-            std::cout << "\nusername : ";
-            std::cin >> username;
-
-            if (username.find_first_of(" \t\n") != std::string::npos) {
-                std::cout << "Username contains white space.\n\n";
+            if (authorization != NULL) {
+                std::cout << "  !!! You are already logged in!\n\n";
                 continue;
             }
 
-            std::cout << "password : ";
-            std::cin >> password;
+            std::vector<std::string> empty_vect;
+            std::string username , password , response;
+            
+            int cont = 1;
 
-            if (password.find_first_of(" \t\n") != std::string::npos) {
-                std::cout << "Password contains white space.\n\n";
-                continue;
+            while (cont) {
+                std::cout << "username : ";
+                getline(std::cin , username);
+
+                if (containsWhitespace(username)) {
+                    std::cout << "  !!! Username contains white space.\n";
+                } else {
+                    cont = 0;
+                }
+            }
+
+            cont = 1;
+
+            while (cont) {
+                std::cout << "password : ";
+                getline(std::cin , password);
+
+
+                if (containsWhitespace(password)) {
+                    std::cout << "  !!! Password contains white space.\n";
+                } else { 
+                    cont = 0;
+                }
             }
 
             nlohmann::json elem = {
@@ -42,14 +59,12 @@ int main() {
                 {"password" , password},
             };
 
-            std::cout << elem.dump() << "\n";
-
             message = compute_post_request(
-                "34.254.242.81:8080",
-                "/api/v1/tema/auth/register",
-                "application/json", elem.dump() , 1, empty_vect, 0);
+                (char *)("34.254.242.81:8080"),
+                (char *)("/api/v1/tema/auth/register"),
+                (char *)("application/json"), elem.dump() , 1, empty_vect, 0);
 
-            sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
 
             send_to_server(sockfd , message);
 
@@ -57,9 +72,9 @@ int main() {
 
             std::string search_str = "error";
             if (response.find(search_str) != std::string::npos) {
-                std::cout << "The username " << username << " is taken!" << std::endl;
+                std::cout << "  !!! The username " << username << " is taken!\n\n";
             } else {
-                std::cout << "User added successfully!" << std::endl;
+                std::cout << "  User added successfully!\n\n";
             }
 
             close_connection(sockfd);
@@ -71,20 +86,36 @@ int main() {
         else if (!strncmp(cmd , "login\n" , 6)) {
             std::vector<std::string> empty_vect;
             std::string username , password , response;
-            std::cout << "\nusername : ";
-            std::cin >> username;
+            int cont = 1;
 
-            if (username.find_first_of(" \t\n") != std::string::npos) {
-                std::cout << "Username contains white space.\n\n";
+            if (authorization != NULL) {
+                std::cout << "  !!! You are already logged in!\n";
                 continue;
             }
 
-            std::cout << "password : ";
-            std::cin >> password;
+            while (cont) {
+                std::cout << "username : ";
+                getline(std::cin , username);
 
-            if (password.find_first_of(" \t\n") != std::string::npos) {
-                std::cout << "Password contains white space.\n\n";
-                continue;
+                if (containsWhitespace(username)) {
+                    std::cout << "  !!! Username contains white space.\n";
+                } else {
+                    cont = 0;
+                }
+            }
+
+            cont = 1;
+
+            while (cont) {
+                std::cout << "password : ";
+                getline(std::cin , password);
+
+
+                if (containsWhitespace(password)) {
+                    std::cout << "  !!! Password contains white space.\n";
+                } else { 
+                    cont = 0;
+                }
             }
 
             nlohmann::json elem = {
@@ -93,11 +124,11 @@ int main() {
             };
 
             message = compute_post_request(
-                "34.254.242.81:8080",
-                "/api/v1/tema/auth/login",
-                "application/json", elem.dump() , 1, empty_vect , 0);
+                (char *)("34.254.242.81:8080"),
+                (char *)("/api/v1/tema/auth/login"),
+                (char *)("application/json"), elem.dump() , 1, empty_vect , 0);
 
-            sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
 
             send_to_server(sockfd , message);
 
@@ -105,9 +136,9 @@ int main() {
 
             std::string search_str = "error";
             if (response.find(search_str) != std::string::npos) {
-                std::cout << "Credentials are not good!\n\n";
+                std::cout << "  !!! Credentials are not good!\n\n";
             } else {
-                std::cout << "Connect\n\n";
+                std::cout << "  Connect\n\n";
             }
 
             authorization = extract_cookies(response);
@@ -123,31 +154,38 @@ int main() {
             std::string response;
 
             if (authorization == NULL) {
-                std::cout << "You are not logged in!\n\n";
-            } else {
-                std::vector<std::string> cookies;
-                cookies.push_back(authorization);
+                std::cout << "  !!! You are not logged in!\n\n";
+                continue;
+            } 
 
-                message = compute_get_request(
-                    "34.254.242.81:8080",
-                    "/api/v1/tema/library/access",
-                    NULL, cookies, 1
-                );
-
-                sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
-
-                send_to_server(sockfd , message);
-
-                response = receive_from_server(sockfd);
-
-                std::string search_str = "error";
-                if (response.find(search_str) != std::string::npos) {
-                    std::cout << "Error! You are not logged in!\n\n";
-                } else {
-                    std::cout << "You entered the library\n\n";
-                    token_JWT = "Authorization: Bearer " + extract_JTW(response);
-                }
+            if (!token_JWT.empty()) {
+                std::cout << "  !!! You are already in the library!\n\n";
+                continue;
             }
+
+            std::vector<std::string> cookies;
+            cookies.push_back(authorization);
+
+            message = compute_get_request(
+                (char *)("34.254.242.81:8080"),
+                (char *)("/api/v1/tema/library/access"),
+                NULL, cookies, 1
+            );
+
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
+
+            send_to_server(sockfd , message);
+
+            response = receive_from_server(sockfd);
+
+            std::string search_str = "error";
+            if (response.find(search_str) != std::string::npos) {
+                std::cout << "  !!! Something bad happened!\n\n";
+            } else {
+                std::cout << "  You entered the library\n\n";
+                token_JWT = "Authorization: Bearer " + extract_JTW(response);
+            }
+            
             close_connection(sockfd);
         }
 
@@ -157,39 +195,45 @@ int main() {
 
             std::string response;
 
-            if (!token_JWT.empty()) {
-                std::vector<std::string> cookies;
-                cookies.push_back(token_JWT);
+            if (authorization == NULL) {
+                std::cout << "  !!! You are not logged in!\n\n";
+                continue;
+            }
 
-                message = compute_get_request(
-                    "34.254.242.81:8080",
-                     "/api/v1/tema/library/books" ,
-                     NULL , cookies , 1);
+            if (token_JWT.empty()) {
+                std::cout << "  !!! You do not have access to the library!\n\n";
+                continue;
+            }
 
-                sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
 
-                send_to_server(sockfd , message);
+            std::vector<std::string> cookies;
+            cookies.push_back(token_JWT);
 
-                response = receive_from_server(sockfd);
+            message = compute_get_request(
+                (char *)("34.254.242.81:8080"),
+                (char *)("/api/v1/tema/library/books") ,
+                    NULL , cookies , 1);
 
-                std::string search_str = "error";
-                if (response.find(search_str) != std::string::npos) {
-                    std::cout << "Error! Something bad happened!" << "\n";
-                } else {
-                    std::string json_list = extract_json_list(response);
-                    nlohmann::json j = nlohmann::json::parse(json_list);
-                    if (j.is_array()) {
-                        int i = 1;
-                        for (nlohmann::json::iterator it = j.begin(); it != j.end(); ++it) {
-                            std::cout << std::to_string(i) <<")\nTitle: " << (*it)["title"].get<std::string>() << std::endl;
-                            std::cout << "ID: " << (*it)["id"].get<int>() << std::endl;
-                            std::cout << "\n";
-                            i++;
-                        }
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
+
+            send_to_server(sockfd , message);
+
+            response = receive_from_server(sockfd);
+
+            std::string search_str = "error";
+            if (response.find(search_str) != std::string::npos) {
+                std::cout << "  !!! Something bad happened!" << "\n";
+            } else {
+                std::string json_list = extract_json_list(response);
+                nlohmann::json j = nlohmann::json::parse(json_list);
+                if (j.is_array()) {
+                    for (nlohmann::json::iterator it = j.begin(); it != j.end(); ++it) {
+                        std::cout <<"{\n\tTitle: " << (*it)["title"].get<std::string>() << std::endl;
+                        std::cout << "\tID: " << (*it)["id"].get<int>() << std::endl;
+                        std::cout << "}\n";
                     }
                 }
-            } else {
-                std::cout << "Error! You do not have access to the library!\n\n";
+                std::cout << "\n";
             }
 
             close_connection(sockfd);
@@ -198,58 +242,76 @@ int main() {
 // =====================================================================================================================  
 
         else if (!strncmp(cmd , "get_book\n" , 9)) {
+
+            if (authorization == NULL) {
+                std::cout << "  !!! You are not logged in!\n\n";
+                continue;
+            }
+
+            if (token_JWT.empty()) {
+                std::cout << "  !!! You do not have access to the library!\n\n";
+                continue;
+            }
+
             std::string response;
             std::vector<std::string> cookies;
             cookies.push_back(token_JWT);
             
             int id;
             std::string input;
+            int cout = 1;
 
-            std::cout << "\nid : ";
-            std::cin >> input;
+            while (cout) {
+                std::cout << "id : ";
+                std::cin >> input;
 
-            if (!is_number(input)) {
-                std::cout << "Id must be a number!\n\n";
-                continue;
-            } else {
-                id = std::stoi(input);
+                if (is_number(input)) {
+                    cout = 0;
+                } else {
+                    std::cout << "  !!! Id must be a number!\n";
+                }
             }
+
+            id = std::stoi(input);
 
             nlohmann::json elem = {
                 {"id" , id},
             };
 
-            if (!token_JWT.empty()) {
-                message = compute_get_request(
-                    "34.254.242.81:8080",
-                     (char *)(std::string("/api/v1/tema/library/books/") + std::to_string(id)).c_str(),
-                     NULL , cookies , 1);
+            if (token_JWT.empty()) {
 
-                sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
-
-                send_to_server(sockfd , message);
-
-                response = receive_from_server(sockfd);
-
-                std::string search_str = "error";
-                if (response.find(search_str) != std::string::npos) {
-                    std::cout << "Error! No book was found!\n\n";
-                } else {
-                    std::string json_list = extract_json(response);
-                    nlohmann::json j = nlohmann::json::parse(json_list);
-                    std::cout << "\n";
-
-                    std::cout << "Title: " << j["title"].get<std::string>() << std::endl;
-                    std::cout << "Author: " << j["author"].get<std::string>() << std::endl;
-                    std::cout << "Publisher: " << j["publisher"].get<std::string>() << std::endl;
-                    std::cout << "Genre: " << j["genre"].get<std::string>() << std::endl;
-                    std::cout << "Page_count: " << j["page_count"].get<int>() << std::endl;
-                    std::cout << "\n";
-                }
-
-            } else {
                 std::cout << "Error! You do not have access to the library!\n\n";
+                continue;
+
             }
+
+            message = compute_get_request(
+                (char *)("34.254.242.81:8080"),
+                (char *)(std::string("/api/v1/tema/library/books/") + std::to_string(id)).c_str(),
+                NULL , cookies , 1);
+
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
+
+            send_to_server(sockfd , message);
+
+            response = receive_from_server(sockfd);
+
+            std::string search_str = "error";
+            if (response.find(search_str) != std::string::npos) {
+                std::cout << "Error! No book was found!\n\n";
+                continue;
+            } 
+
+            std::string json_list = extract_json(response);
+            nlohmann::json j = nlohmann::json::parse(json_list);
+
+            std::cout << "{\n\tTitle: " << j["title"].get<std::string>() << std::endl;
+            std::cout << "\tAuthor: " << j["author"].get<std::string>() << std::endl;
+            std::cout << "\tPublisher: " << j["publisher"].get<std::string>() << std::endl;
+            std::cout << "\tGenre: " << j["genre"].get<std::string>() << std::endl;
+            std::cout << "\tPage_count: " << j["page_count"].get<int>() << std::endl;
+            std::cout << "}\n\n";
+
             close_connection(sockfd);
         }
 
@@ -257,31 +319,45 @@ int main() {
 
         else if (!strncmp(cmd , "add_book\n" , 9)) {
 
+            if (authorization == NULL) {
+                std::cout << "  !!! You are not logged in!\n\n";
+                continue;
+            } 
+
+            if (token_JWT.empty()) {
+                std::cout << "  !!! You do not have access to the library!\n\n";
+                continue;
+            }
+
             std::string response;
             std::vector<std::string> cookies;
             cookies.push_back(token_JWT);
             std::string title , author , genre , publisher ;
             int page_count;
             std::cout << "\ntitle : ";
-            std::cin >> title;
+            getline(std::cin , title);
             std::cout << "author : ";
-            std::cin >> author;   
+            getline(std::cin , author);
             std::cout << "genre : ";
-            std::cin >> genre;
+            getline(std::cin , genre);
             std::cout << "publisher : ";
-            std::cin >> publisher;
+            getline(std::cin , publisher);
 
             std::string input;
 
-            std::cout << "page_count : ";
-            std::cin >> input;
+            int cout = 1;
 
-            if (!is_number(input)) {
-                std::cout << "Page count must be a number!\n\n";
-                continue;
-            } else {
-                page_count = std::stoi(input);
+            while (cout) {
+                std::cout << "page_count : ";
+                std::cin >> input;
+                if (is_number(input)) {
+                    cout = 0;
+                } else {
+                    std::cout << "  !!! Page count must be a number!\n";
+                }
             }
+
+            page_count = std::stoi(input);
 
             nlohmann::json elem = {
                 {"title" , title},
@@ -291,46 +367,58 @@ int main() {
                 {"page_count" , page_count},
             };
 
-            if (!token_JWT.empty()) {
-                message = compute_post_request(
-                "34.254.242.81:8080",
-                "/api/v1/tema/library/books",
-                "application/json", elem.dump() , 1, cookies , 1);
+            message = compute_post_request(
+            (char *)("34.254.242.81:8080"),
+            (char *)("/api/v1/tema/library/books"),
+            (char *)("application/json"), elem.dump() , 1, cookies , 1);
 
-                sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
 
-                send_to_server(sockfd , message);
+            send_to_server(sockfd , message);
 
-                response = receive_from_server(sockfd);
+            response = receive_from_server(sockfd);
 
-                std::string search_str = "error";
-                if (response.find(search_str) != std::string::npos) {
-                    std::cout << "\nError! Something bad happened!" << "\n\n";
-                } else {
-                    std::cout << "\nBook successfully added!\n\n";
-                }
-
+            std::string search_str = "error";
+            if (response.find(search_str) != std::string::npos) {
+                std::cout << "  !!! Something bad happened!\n\n";
             } else {
-                std::cout << "\nError! You do not have access to the library!\n\n";
+                std::cout << "  Book successfully added!\n\n";
             }
+
             close_connection(sockfd);
         }
 
 // =====================================================================================================================  
 
         else if (!strncmp(cmd , "delete_book\n" , 12)) {
+
+            if (authorization == NULL) {
+                std::cout << "  !!! You are not logged in!\n\n";
+                continue;
+            }
+
+            if (token_JWT.empty()) {
+                std::cout << "  !!! You do not have access to the library!\n\n";
+                continue;
+            }
+
             int id;
             std::string input;
 
-            std::cout << "\nid : ";
-            std::cin >> input;
+            int cout = 1;
 
-            if (!is_number(input)) {
-                std::cout << "Id must be a number!\n\n";
-                continue;
-            } else {
-                id = std::stoi(input);
+            while (cout) {
+                std::cout << "id : ";
+                std::cin >> input;
+
+                if (is_number(input)) {
+                    cout = 0;
+                } else {
+                    std::cout << "  !!! Id must be a number!\n";
+                }
             }
+
+            id = std::stoi(input);
 
             nlohmann::json elem = {
                 {"id" , id},
@@ -340,28 +428,24 @@ int main() {
             std::vector<std::string> cookies;
             cookies.push_back(token_JWT);
 
-            if (!token_JWT.empty()) {
-                message = compute_delete_request(
-                    "34.254.242.81:8080",
-                     (char *)(std::string("/api/v1/tema/library/books/") + std::to_string(id)).c_str(),
-                     NULL , cookies , 1);
+            message = compute_delete_request(
+                (char *)("34.254.242.81:8080"),
+                (char *)(std::string("/api/v1/tema/library/books/") + std::to_string(id)).c_str(),
+                NULL , cookies , 1);
 
-                sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
 
-                send_to_server(sockfd , message);
+            send_to_server(sockfd , message);
 
-                response = receive_from_server(sockfd);         
+            response = receive_from_server(sockfd);         
 
-                std::string search_str = "error";
-                if (response.find(search_str) != std::string::npos) {
-                    std::cout << "Error! No book was deleted!\n\n";
-                } else {
-                    std::cout << "The book with ID = " << id << " has been successfully deleted!\n\n";
-                }
-            
+            std::string search_str = "error";
+            if (response.find(search_str) != std::string::npos) {
+                std::cout << "  !!! No book was deleted!\n\n";
             } else {
-                std::cout << "Error! You do not have access to the library!\n\n";
+                std::cout << "  The book with ID = " << id << " has been successfully deleted!\n\n";
             }
+
             close_connection(sockfd);
 
         }
@@ -370,35 +454,37 @@ int main() {
 
         else if (!strncmp(cmd , "logout\n" , 7)) {
             
+            if (authorization == NULL) {
+                std::cout << "  !!! You are not logged in!\n\n";
+                continue;
+            }
+
             std::string response;
 
-            if (authorization == NULL) {
-                std::cout << "You are not logged in!\n\n";
+            std::vector<std::string> cookies;
+            cookies.push_back(authorization);
+
+            message = compute_get_request(
+                (char *)("34.254.242.81:8080"),
+                (char *)("/api/v1/tema/auth/logout") ,
+                NULL , cookies , 1);
+
+            sockfd = open_connection((char *)("34.254.242.81"), 8080, AF_INET, SOCK_STREAM, 0);
+
+            send_to_server(sockfd , message);
+
+            response = receive_from_server(sockfd);
+
+            std::string search_str = "error";
+            if (response.find(search_str) != std::string::npos) {
+                std::cout << "Error! Unsucessful logout!\n\n";
             } else {
-                std::vector<std::string> cookies;
-                cookies.push_back(authorization);
-
-                message = compute_get_request(
-                    "34.254.242.81:8080",
-                     "/api/v1/tema/auth/logout" ,
-                     NULL , cookies , 1);
-
-                sockfd = open_connection("34.254.242.81", 8080, AF_INET, SOCK_STREAM, 0);
-
-                send_to_server(sockfd , message);
-
-                response = receive_from_server(sockfd);
-
-                std::string search_str = "error";
-                if (response.find(search_str) != std::string::npos) {
-                    std::cout << "Error! Unsucessful logout!\n\n";
-                } else {
-                    std::cout << "Logout successful\n\n";
-                }
-
-                authorization = NULL;
-                token_JWT.clear();
+                std::cout << "Logout successful\n\n";
             }
+
+            authorization = NULL;
+            token_JWT.clear();
+
             close_connection(sockfd);
         }
     }

@@ -254,3 +254,12 @@ bool is_number(const std::string& input) {
     }
     return true;
 }
+
+bool containsWhitespace(const std::string& str) {
+    for (char c : str) {
+        if (std::isspace(c)) {
+            return true;
+        }
+    }
+    return false;
+}
